@@ -438,7 +438,7 @@ export async function GET(req: NextRequest) {
   const ran: string[] = [];
   try {
     for (const statement of STATEMENTS) {
-      await sql.query(statement);
+         await sql(statement);
       ran.push(statement.slice(0, 40).replace(/\s+/g, " ") + "…");
     }
   } catch (err) {
