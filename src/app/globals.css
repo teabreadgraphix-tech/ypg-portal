@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  h1, h2, h3 {
+    font-family: var(--font-serif);
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded bg-forest-800 px-4 py-2.5 text-sm font-medium text-paper transition-colors hover:bg-forest-700 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded border border-line bg-white px-4 py-2.5 text-sm font-medium text-ink transition-colors hover:border-forest-700 hover:text-forest-800;
+  }
+  .field-label {
+    @apply mb-1.5 block text-sm font-medium text-ink;
+  }
+  .field-input {
+    @apply w-full rounded border border-line bg-white px-3 py-2.5 text-sm text-ink placeholder:text-ink/40 focus:border-forest-700 focus:outline-none focus:ring-1 focus:ring-forest-700;
+  }
+  .card {
+    @apply rounded border border-line bg-white;
+  }
+  .badge {
+    @apply inline-flex items-center rounded-sm px-2 py-0.5 text-xs font-medium;
+  }
+}
