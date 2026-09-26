@@ -6,7 +6,7 @@ account needed), Vercel Blob for file storage, and a free Neon Postgres
 database.
 
 ## What's fully working right now
-- Login / logout, hashed passwords, role-based access (Super Admin, Deputy
+- Login / logout,  hashed passwords, role-based access (Super Admin, Deputy
   Project Manager, Youth MP, Viewer), session cookies
 - Dashboard with real stat cards computed from the database, plus a recent
   activity feed
