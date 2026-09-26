@@ -3,19 +3,35 @@ import { drizzle } from "drizzle-orm/neon-http";
 import { sql } from "drizzle-orm";
 import * as schema from "./schema";
 
-if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL must be set. Add it in your Vercel project's Environment Variables.");
+type Db = ReturnType<typeof drizzle<typeof schema>>;
+
+let _db: Db | null = null;
+
+function getDb(): Db {
+  if (_db) return _db;
+
+  const raw = process.env.DATABASE_URL ?? "";
+  const url = raw.trim().replace(/^['"]|['"]$/g, "");
+
+  if (!url) {
+    throw new Error(
+      "DATABASE_URL must be set. Add it in your Vercel project's Environment Variables (Settings → Environment Variables), then redeploy.",
+    );
+  }
+
+  const client = neon(url);
+  _db = drizzle(client, { schema });
+  return _db;
 }
 
-const client = neon(process.env.DATABASE_URL);
-export const db = drizzle(client, { schema });
+export const db: Db = new Proxy({} as Db, {
+  get(_target, prop, receiver) {
+    return Reflect.get(getDb() as object, prop, receiver);
+  },
+});
 
 export type ReferenceType = "APP" | "PRO" | "COR" | "PRJ" | "ACT" | "RPT";
 
-/**
- * Atomically allocates the next sequence number for a reference type + year
- * and returns e.g. "YPG-APP-2026-0001". Safe under concurrent submissions.
- */
 export async function generateReference(type: ReferenceType, year = new Date().getFullYear()) {
   const [row] = await db
     .insert(schema.referenceSequences)
