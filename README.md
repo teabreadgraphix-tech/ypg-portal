@@ -3,7 +3,7 @@
 Rebuilt as a single Next.js app so it deploys cleanly on **Vercel's free
 tier** with no Replit-specific services: its own built-in login (no Clerk
 account needed), Vercel Blob for file storage, and a free Neon Postgres
-database.
+database. 
 
 ## What's fully working right now
 - Login / logout,  hashed passwords, role-based access (Super Admin, Deputy
