@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { StatusBadge } from "@/components/status-badge";
 
 type Appointee = {
@@ -15,7 +16,38 @@ type Appointee = {
   constituencyId: number;
   regionId: number;
   submittedAt: string;
+  photoUrl: string | null;
 };
+
+function Avatar({ name, photoUrl, size = 36 }: { name: string; photoUrl: string | null; size?: number }) {
+  const initials = name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((n) => n[0]?.toUpperCase())
+    .join("");
+  if (photoUrl) {
+    return (
+      <Image
+        src={photoUrl}
+        alt={name}
+        width={size}
+        height={size}
+        className="rounded-full border border-line object-cover"
+        style={{ width: size, height: size }}
+        unoptimized
+      />
+    );
+  }
+  return (
+    <div
+      className="flex shrink-0 items-center justify-center rounded-full bg-forest-800 font-medium text-paper"
+      style={{ width: size, height: size, fontSize: size * 0.4 }}
+    >
+      {initials || "?"}
+    </div>
+  );
+}
 
 const STATUSES = ["Pending", "Active", "Inactive", "Resigned", "Removed"];
 
@@ -79,6 +111,7 @@ export default function AppointeesPage() {
             <table className="w-full text-left text-sm">
               <thead className="bg-forest-950 text-paper">
                 <tr>
+                  <th className="px-4 py-3 font-medium"></th>
                   <th className="px-4 py-3 font-medium">Reference</th>
                   <th className="px-4 py-3 font-medium">Name</th>
                   <th className="px-4 py-3 font-medium">Position</th>
@@ -89,6 +122,7 @@ export default function AppointeesPage() {
               <tbody className="divide-y divide-line bg-white">
                 {rows.map((a) => (
                   <tr key={a.id} className="hover:bg-forest-950/[0.03]">
+                    <td className="px-4 py-3"><Avatar name={a.name} photoUrl={a.photoUrl} /></td>
                     <td className="px-4 py-3">
                       <Link href={`/dashboard/appointees/${a.id}`} className="text-forest-800 underline">
                         {a.reference}
@@ -108,10 +142,13 @@ export default function AppointeesPage() {
           <div className="space-y-3 md:hidden">
             {rows.map((a) => (
               <Link key={a.id} href={`/dashboard/appointees/${a.id}`} className="card block p-4">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <p className="font-medium text-ink">{a.name}</p>
-                    <p className="text-sm text-ink/60">{a.position}</p>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <Avatar name={a.name} photoUrl={a.photoUrl} size={44} />
+                    <div>
+                      <p className="font-medium text-ink">{a.name}</p>
+                      <p className="text-sm text-ink/60">{a.position}</p>
+                    </div>
                   </div>
                   <StatusBadge status={a.status} />
                 </div>
