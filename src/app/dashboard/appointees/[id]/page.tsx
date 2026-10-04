@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import Image from "next/image";
 import { StatusBadge } from "@/components/status-badge";
 
 type Appointee = {
@@ -43,15 +44,33 @@ export default function AppointeeDetailPage() {
 
   if (!record) return <p className="text-sm text-ink/60">Loading…</p>;
 
+  const photo = docs.find((d) => d.mimeType.startsWith("image/"));
+
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <div>
-        <p className="text-xs uppercase tracking-wide text-ink/50">{record.reference}</p>
-        <div className="mt-1 flex items-center gap-3">
-          <h2 className="font-serif text-xl font-semibold text-ink">{record.name}</h2>
-          <StatusBadge status={record.status} />
+      <div className="flex items-center gap-4">
+        {photo ? (
+          <Image
+            src={photo.blobUrl}
+            alt={record.name}
+            width={72}
+            height={72}
+            unoptimized
+            className="h-[72px] w-[72px] shrink-0 rounded-full border border-line object-cover"
+          />
+        ) : (
+          <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-full bg-forest-800 text-xl font-medium text-paper">
+            {record.name.split(" ").filter(Boolean).slice(0, 2).map((n) => n[0]?.toUpperCase()).join("")}
+          </div>
+        )}
+        <div>
+          <p className="text-xs uppercase tracking-wide text-ink/50">{record.reference}</p>
+          <div className="mt-1 flex items-center gap-3">
+            <h2 className="font-serif text-xl font-semibold text-ink">{record.name}</h2>
+            <StatusBadge status={record.status} />
+          </div>
+          <p className="text-sm text-ink/60">{record.position}</p>
         </div>
-        <p className="text-sm text-ink/60">{record.position}</p>
       </div>
 
       <div className="card grid grid-cols-1 gap-4 p-6 sm:grid-cols-2">
