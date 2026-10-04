@@ -16,6 +16,12 @@ const sans = IBM_Plex_Sans({
 export const metadata: Metadata = {
   title: "YPG Portal — Programmes, Projects & Logistics",
   description: "Youth Parliament Ghana — Office of Programmes, Projects & Logistics",
+  icons: {
+    icon: [
+      { url: "/favicon.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-64.png", sizes: "64x64", type: "image/png" },
+    ],
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
