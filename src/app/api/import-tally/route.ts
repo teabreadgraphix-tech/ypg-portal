@@ -9,7 +9,8 @@ export const maxDuration = 60;
 const TALLY_FORM_ID = "dWrXrd";
 const BATCH_SIZE = 5; // new Youth MPs to process per visit to this URL
 
-const MP_FIELDS = ["fullName", "gender", "region", "constituency", "phone", "whatsapp", "email"] as const;
+const MP_FIELDS = ["fullName", "gender", "region", "constituency", "phone", "whatsapp", "email", "photo"] as const;
+const MP_FIELD_COUNT = MP_FIELDS.length;
 const POS_FIELDS = [
   "fullName", "gender", "dob", "phone", "whatsapp", "email", "institution", "occupation", "dateAppointed", "photo",
 ] as const;
@@ -60,13 +61,13 @@ async function fetchAllSubmissions(): Promise<{ questions: TallyQuestion[]; subm
 
 function parseSubmission(questions: TallyQuestion[], sub: TallySubmission) {
   const qidRole = new Map<string, [string, string]>();
-  questions.slice(0, 7).forEach((q, i) => qidRole.set(q.id, ["mp", MP_FIELDS[i]]));
+  questions.slice(0, MP_FIELD_COUNT).forEach((q, i) => qidRole.set(q.id, ["mp", MP_FIELDS[i]]));
   for (let p = 0; p < 7; p++) {
-    const chunk = questions.slice(7 + p * 10, 7 + p * 10 + 10);
+    const chunk = questions.slice(MP_FIELD_COUNT + p * 10, MP_FIELD_COUNT + p * 10 + 10);
     chunk.forEach((q, i) => qidRole.set(q.id, [`pos${p}`, POS_FIELDS[i]]));
   }
 
-  const mp: Record<string, string> = {};
+  const mp: Record<string, string | { name: string; url: string }> = {};
   const positions: Record<string, string | { name: string; url: string }>[] = Array.from({ length: 7 }, () => ({}));
 
   for (const r of sub.responses) {
@@ -75,7 +76,7 @@ function parseSubmission(questions: TallyQuestion[], sub: TallySubmission) {
     const [group, field] = role;
     const val = extract(r.answer);
     if (val === undefined) continue;
-    if (group === "mp") mp[field] = val as string;
+    if (group === "mp") mp[field] = val;
     else positions[Number(group.slice(3))][field] = val;
   }
   return { id: sub.id, submittedAt: sub.submittedAt, mp, positions };
@@ -115,7 +116,7 @@ export async function GET(req: NextRequest) {
 
   const latestByEmail = new Map<string, (typeof parsed)[number]>();
   for (const p of parsed) {
-    const email = (p.mp.email || "").trim().toLowerCase();
+    const email = ((p.mp.email as string) || "").trim().toLowerCase();
     if (!email) continue;
     const existing = latestByEmail.get(email);
     if (!existing || new Date(p.submittedAt) > new Date(existing.submittedAt)) {
@@ -130,29 +131,45 @@ export async function GET(req: NextRequest) {
   let newCount = 0;
 
   for (const sub of latestByEmail.values()) {
-    const email = (sub.mp.email || "").trim().toLowerCase();
+    const email = ((sub.mp.email as string) || "").trim().toLowerCase();
+    const mpName = (sub.mp.fullName as string) || email;
     const [existingMp] = await db.select().from(youthMps).where(eq(youthMps.email, email)).limit(1);
     if (existingMp) {
-      skippedAlready.push(sub.mp.fullName || email);
+      skippedAlready.push(mpName);
       continue;
     }
     if (newCount >= BATCH_SIZE) continue;
 
-    const region = await findOrCreateRegion((sub.mp.region || "Unspecified").trim());
-    const constituency = await findOrCreateConstituency((sub.mp.constituency || "Unspecified").trim(), region.id);
+    const region = await findOrCreateRegion(((sub.mp.region as string) || "Unspecified").trim());
+    const constituency = await findOrCreateConstituency(((sub.mp.constituency as string) || "Unspecified").trim(), region.id);
 
     const [youthMp] = await db
       .insert(youthMps)
       .values({
-        fullName: (sub.mp.fullName || "Unknown").trim(),
-        gender: sub.mp.gender,
-        phone: sub.mp.phone,
-        whatsapp: sub.mp.whatsapp,
+        fullName: ((sub.mp.fullName as string) || "Unknown").trim(),
+        gender: sub.mp.gender as string,
+        phone: sub.mp.phone as string,
+        whatsapp: sub.mp.whatsapp as string,
         email,
         constituencyId: constituency.id,
         regionId: region.id,
       })
       .returning();
+
+    const mpPhoto = sub.mp.photo as { name: string; url: string } | undefined;
+    if (mpPhoto?.url) {
+      try {
+        const res = await fetch(mpPhoto.url);
+        if (res.ok) {
+          const buffer = Buffer.from(await res.arrayBuffer());
+          const contentType = res.headers.get("content-type") || "image/jpeg";
+          const blobUrl = await uploadFile(buffer, mpPhoto.name || `${youthMp.fullName}.jpg`, contentType);
+          await db.update(youthMps).set({ photoUrl: blobUrl }).where(eq(youthMps.id, youthMp.id));
+        }
+      } catch {
+        // Non-fatal; can be retried via the dedicated catch-up form/import later.
+      }
+    }
 
     const appointeeNames: string[] = [];
     const today = new Date().toISOString().slice(0, 10);
