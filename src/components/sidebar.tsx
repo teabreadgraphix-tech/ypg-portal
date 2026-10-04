@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import type { Role } from "@/lib/auth";
 
@@ -34,9 +35,12 @@ export function Sidebar({ role, fullName, roleLabel }: { role: Role; fullName: s
 
   return (
     <aside className="flex h-screen w-64 flex-col bg-forest-950 text-paper">
-      <div className="border-b border-forest-800 px-5 py-5">
-        <p className="font-serif text-sm font-semibold leading-tight">Youth Parliament Ghana</p>
-        <p className="mt-0.5 text-xs text-gold-200/80">Programmes, Projects &amp; Logistics</p>
+      <div className="flex items-center gap-3 border-b border-forest-800 px-5 py-4">
+        <Image src="/logo.png" alt="" width={40} height={40} />
+        <div>
+          <p className="font-serif text-sm font-semibold leading-tight">Youth Parliament Ghana</p>
+          <p className="mt-0.5 text-xs text-gold-200/80">Programmes, Projects &amp; Logistics</p>
+        </div>
       </div>
       <nav className="flex-1 overflow-y-auto px-2 py-3">
         {items.map((item) => {
@@ -54,12 +58,15 @@ export function Sidebar({ role, fullName, roleLabel }: { role: Role; fullName: s
           );
         })}
       </nav>
-      <div className="border-t border-forest-800 px-4 py-4">
-        <p className="truncate text-sm font-medium">{fullName}</p>
-        <p className="text-xs text-gold-200/80">{roleLabel}</p>
-        <button onClick={logout} className="mt-3 text-xs text-paper/60 underline hover:text-paper">
-          Log out
-        </button>
+      <div className="flex items-center gap-3 border-t border-forest-800 px-4 py-4">
+        <Image src="/ppl-seal.png" alt="" width={36} height={36} className="shrink-0 opacity-90" />
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium">{fullName}</p>
+          <p className="text-xs text-gold-200/80">{roleLabel}</p>
+          <button onClick={logout} className="mt-1 text-xs text-paper/60 underline hover:text-paper">
+            Log out
+          </button>
+        </div>
       </div>
     </aside>
   );
