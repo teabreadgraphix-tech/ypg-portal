@@ -2,6 +2,7 @@
 
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
 
 function LoginForm() {
   const router = useRouter();
@@ -36,14 +37,30 @@ function LoginForm() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-forest-950 px-4">
-      <div className="w-full max-w-sm">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-forest-950 px-4">
+      {/* Parliament chamber photo, dimmed so the form stays fully legible */}
+      <Image
+        src="/parliament-bg.jpg"
+        alt=""
+        fill
+        priority
+        className="object-cover opacity-20"
+      />
+      <div className="absolute inset-0 bg-gradient-to-b from-forest-950/80 via-forest-950/90 to-forest-950" />
+
+      <div className="relative w-full max-w-sm">
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 h-12 w-12 rounded-full border-2 border-gold-500" />
+          <Image
+            src="/logo.png"
+            alt="Youth Parliament Ghana"
+            width={88}
+            height={88}
+            className="mx-auto mb-4 drop-shadow-lg"
+          />
           <h1 className="font-serif text-xl font-semibold text-paper">Youth Parliament Ghana</h1>
           <p className="mt-1 text-sm text-gold-200">Office of Programmes, Projects &amp; Logistics</p>
         </div>
-        <form onSubmit={onSubmit} className="card space-y-4 p-6">
+        <form onSubmit={onSubmit} className="card space-y-4 bg-white/95 p-6 shadow-xl backdrop-blur-sm">
           <div>
             <label className="field-label" htmlFor="email">Email</label>
             <input
