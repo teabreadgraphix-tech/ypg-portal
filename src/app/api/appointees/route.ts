@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { and, desc, eq, ilike, or } from "drizzle-orm";
+import { and, desc, eq, ilike, inArray, or } from "drizzle-orm";
 import { z } from "zod";
 import { db, generateReference } from "@/db";
-import { appointees, activityLogs } from "@/db/schema";
+import { appointees, activityLogs, documents } from "@/db/schema";
 import { getSession } from "@/lib/auth";
 
 export async function GET(req: NextRequest) {
@@ -20,7 +20,6 @@ export async function GET(req: NextRequest) {
   if (constituencyId) conditions.push(eq(appointees.constituencyId, Number(constituencyId)));
   if (regionId) conditions.push(eq(appointees.regionId, Number(regionId)));
 
-  // Youth MPs only ever see their own submissions.
   const youthMpFilter =
     session.role === "youth_mp" ? eq(appointees.submittedById, session.userId) : undefined;
 
@@ -40,7 +39,22 @@ export async function GET(req: NextRequest) {
     .where(and(...conditions, youthMpFilter, searchClause))
     .orderBy(desc(appointees.submittedAt));
 
-  return NextResponse.json(rows);
+  // Attach each appointee's first photo (if any) for list/card thumbnails.
+  const ids = rows.map((r) => r.id);
+  const photosByAppointeeId = new Map<number, string>();
+  if (ids.length > 0) {
+    const docs = await db
+      .select({ parentId: documents.parentId, blobUrl: documents.blobUrl, mimeType: documents.mimeType })
+      .from(documents)
+      .where(and(eq(documents.parentType, "appointee"), inArray(documents.parentId, ids)));
+    for (const d of docs) {
+      if (d.mimeType.startsWith("image/") && !photosByAppointeeId.has(d.parentId)) {
+        photosByAppointeeId.set(d.parentId, d.blobUrl);
+      }
+    }
+  }
+
+  return NextResponse.json(rows.map((r) => ({ ...r, photoUrl: photosByAppointeeId.get(r.id) ?? null })));
 }
 
 const createSchema = z.object({
