@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import { StatusBadge } from "@/components/status-badge";
 
 type Proposal = {
@@ -86,6 +87,15 @@ export default function ProposalDetailPage() {
           {record.categoryName && ` · ${record.categoryName}`}
         </p>
       </div>
+
+      {record.status === "Approved" && (
+        <div className="rounded border border-forest-700/30 bg-forest-800/5 p-4">
+          <p className="text-sm font-medium text-ink">This proposal is approved and ready to become a project.</p>
+          <Link href={`/dashboard/projects/new?fromProposal=${record.id}`} className="btn-primary mt-3 inline-block">
+            Create Project
+          </Link>
+        </div>
+      )}
 
       {record.status === "Revision Required" && (
         <div className="rounded border border-gold-500/40 bg-gold-100 p-4">
