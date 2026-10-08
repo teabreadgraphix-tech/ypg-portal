@@ -13,7 +13,7 @@ export default function NewActionPlanPage() {
   const [form, setForm] = useState({
     actionItem: "", objective: "", responsibleYouthMpId: "", department: "",
     startDate: "", deadline: "", priority: "Medium", notes: "",
-  }); 
+  });
 
   useEffect(() => { fetch("/api/lookups").then((r) => r.json()).then(setLookups); }, []);
 
